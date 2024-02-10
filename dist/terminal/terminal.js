@@ -23,11 +23,10 @@ class Terminal {
         this.main.chdir(cwd);
     }
     onNewCommand() { }
-    constructor(path = process.cwd()) {
+    constructor() {
         this.commandList = [];
         this.cwd = process.cwd();
         this.listen();
-        this.chdir(path);
     }
     listen() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -55,6 +54,14 @@ class Terminal {
                 console.error(cwd + " is not an existing directory.");
             }
             this.cwd = cwd;
+        });
+    }
+    cd(newPath) {
+        this.run(() => {
+            if (!(0, fs_1.existsSync)(newPath)) {
+                console.error(newPath + " is not an existing directory.");
+            }
+            this.cwd = newPath;
         });
     }
     kill() {

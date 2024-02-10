@@ -21,10 +21,8 @@ export default class Terminal {
     private onNewCommand(): void {}
     private cwd: string = process.cwd();
 
-    public constructor(path: string = process.cwd()) {
+    public constructor() {
         this.listen();
-
-        this.chdir(path);
     }
 
     private async listen(): Promise<void> {
@@ -60,6 +58,16 @@ export default class Terminal {
 
             this.cwd = cwd;
         });
+    }
+
+    public cd(newPath: string) {
+        this.run(() => {
+            if (!existsSync(newPath)) {
+                console.error(newPath + " is not an existing directory.");
+            }
+
+            this.cwd = newPath;
+        })
     }
 
     public kill(): void {
