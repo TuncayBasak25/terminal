@@ -1,1 +1,3 @@
-export * from "./terminal/terminal";
+import Terminal from "./terminal/terminal";
+
+export default Terminal;
