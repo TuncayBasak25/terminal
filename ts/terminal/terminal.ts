@@ -20,14 +20,18 @@ export default class Terminal {
     
     private commandList: Command[] = [];
     private commmandRunning?: Promise<void>;
-    private commandsEnded: () => void = () => {};
     
     public async run(...commandList: Command[]): Promise<void> {
         this.commandList.push(...commandList);
         
-        await this.commmandRunning;
+        if (this.commmandRunning) {
+            await this.commmandRunning;
+
+            return;
+        }
         
-        this.commmandRunning = new Promise(res => this.commandsEnded = res);
+        let commandsEnded: () => void = () => {};
+        this.commmandRunning = new Promise(res => commandsEnded = res);
         while (this.commandList.length > 0) {
             const command = this.commandList.shift();
             
@@ -41,7 +45,8 @@ export default class Terminal {
             await new Promise(res => setTimeout(res, 0));
         }
         
-        this.commandsEnded();
+        commandsEnded();
+        this.commmandRunning = undefined;
     }
     
     private process?: ChildProcessWithoutNullStreams;
