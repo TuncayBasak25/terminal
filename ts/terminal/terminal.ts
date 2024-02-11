@@ -1,58 +1,51 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
-type Command = string | (() => void);
+type Command = string | (() => void) | (() => Promise<void>);
 
 export default class Terminal {
     
-    private static $main: Terminal;
+    public static readonly instances: { [key: string]: Terminal } = {};
+
+    public static open(name: string): Terminal {
+        if (Terminal.instances[name]) return Terminal.instances[name];
+
+        const terminal = new Terminal();
+
+        Terminal.instances[name] = terminal;
+
+        return terminal;
+    }
+
+    public constructor(public readonly cwd: string = process.cwd()) {}
     
-    /**
-     * Use this for rapidly using a common main terminal everywhere.
-     */
-    public static get main(): Terminal {
-        if (!Terminal.$main) {
-            Terminal.$main = new Terminal();
-        }
-
-        return Terminal.$main;
-    }
-
-
-    public static run(...commandList: Command[]): void {
-        this.main.run(...commandList);
-    }
-
-    private process?: ChildProcessWithoutNullStreams;
     private commandList: Command[] = [];
-    private onNewCommand(): void {}
-
-    public constructor(public readonly cwd: string = process.cwd()) {
-        this.listen();
-    }
-
-    private async listen(): Promise<void> {
-        if (this.commandList.length === 0) {
-            await new Promise<void>(resolve => this.onNewCommand = resolve);
-        }
-
-        const command = this.commandList.shift();
-
-        if (typeof command === 'string') {
-            await this.exec(command);
-        }
-        else if (command) {
-            command();
-        }
-
-        this.listen();
-    }
-
-    public run(...commandList: Command[]): void {
+    private commmandRunning?: Promise<void>;
+    private commandsEnded: () => void = () => {};
+    
+    public async run(...commandList: Command[]): Promise<void> {
         this.commandList.push(...commandList);
-
-        this.onNewCommand();
+        
+        await this.commmandRunning;
+        
+        this.commmandRunning = new Promise(res => this.commandsEnded = res);
+        while (this.commandList.length > 0) {
+            const command = this.commandList.shift();
+            
+            if (typeof command === 'string') {
+                await this.exec(command);
+            }
+            else if (command) {
+                await command();
+            }
+            
+            await new Promise(res => setTimeout(res, 0));
+        }
+        
+        this.commandsEnded();
     }
-
+    
+    private process?: ChildProcessWithoutNullStreams;
+    
     public kill(): void {
         if (this.process) {
             this.process.kill();
