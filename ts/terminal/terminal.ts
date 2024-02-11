@@ -1,27 +1,32 @@
-import { existsSync } from "fs";
-import path from "path";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 
 type Command = string | (() => void);
 
 export default class Terminal {
     
-    private static main: Terminal = new Terminal();
+    private static $main: Terminal;
+    
+    /**
+     * Use this for rapidly using a common main terminal everywhere.
+     */
+    public static get main(): Terminal {
+        if (!Terminal.$main) {
+            Terminal.$main = new Terminal();
+        }
+
+        return Terminal.$main;
+    }
+
 
     public static run(...commandList: Command[]): void {
         this.main.run(...commandList);
     }
 
-    public static chdir(cwd: string): void {
-        this.main.chdir(cwd);
-    }
-
     private process?: ChildProcessWithoutNullStreams;
     private commandList: Command[] = [];
     private onNewCommand(): void {}
-    private cwd: string = process.cwd();
 
-    public constructor() {
+    public constructor(public readonly cwd: string = process.cwd()) {
         this.listen();
     }
 
@@ -46,28 +51,6 @@ export default class Terminal {
         this.commandList.push(...commandList);
 
         this.onNewCommand();
-    }
-
-    public chdir(relativePath: string): void {
-        this.run(() => {
-            const cwd = path.join(this.cwd, relativePath);
-
-            if (!existsSync(cwd)) {
-                console.error(cwd + " is not an existing directory.");
-            }
-
-            this.cwd = cwd;
-        });
-    }
-
-    public cd(newPath: string) {
-        this.run(() => {
-            if (!existsSync(newPath)) {
-                console.error(newPath + " is not an existing directory.");
-            }
-
-            this.cwd = newPath;
-        })
     }
 
     public kill(): void {
