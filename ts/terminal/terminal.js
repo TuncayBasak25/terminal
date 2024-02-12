@@ -46,9 +46,9 @@ class Terminal {
             this.commmandRunning = undefined;
         });
     }
-    node(relativeFilePath = "./ts/index") {
+    node(relativeFilePath = "./ts/index", options = { env: {} }) {
         let close = () => { };
-        this.process = (0, child_process_1.spawn)("node", [relativeFilePath]);
+        this.process = (0, child_process_1.spawn)("node", [relativeFilePath], { env: Object.assign(Object.assign({}, process.env), options.env) });
         this.process.stdout.on('data', (data) => console.log(`${this.name}_node_log: ${data}`));
         this.process.stderr.on('data', (data) => console.error(`${this.name}_node_err: ${data}`));
         this.process.on('close', (code) => close());

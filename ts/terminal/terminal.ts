@@ -50,10 +50,10 @@ export default class Terminal {
         this.commmandRunning = undefined;
     }
 
-    public node(relativeFilePath: string = "./ts/index") {
+    public node(relativeFilePath: string = "./ts/index", options: { env?: {[key: string]: string } } = { env: {} }) {
         let close = () => { };
 
-        this.process = spawn("node", [relativeFilePath]);
+        this.process = spawn("node", [relativeFilePath], { env: { ...process.env, ...options.env } });
 
         this.process.stdout.on('data', (data) => console.log(`${this.name}_node_log: ${data}`));
 
