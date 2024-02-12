@@ -50,7 +50,7 @@ class Terminal {
         let close = () => { };
         this.process = (0, child_process_1.spawn)("node", [relativeFilePath], { env: Object.assign(Object.assign({}, process.env), options.env) });
         this.process.stdout.on('data', (data) => console.log(`${this.name}_node_log: ${data}`));
-        this.process.stderr.on('data', (data = "") => data.match(/Warning: Closing directory handle on garbage collection/) || console.error(`${this.name}_node_err: ${data}`));
+        this.process.stderr.on('data', (data) => typeof data === "string" && !data.match(/Warning: Closing directory handle on garbage collection/) && console.error(`${this.name}_node_err: ${data}`));
         this.process.on('close', (code) => close());
         return new Promise(resolve => close = resolve);
     }
