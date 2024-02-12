@@ -49,6 +49,20 @@ export default class Terminal {
         commandsEnded();
         this.commmandRunning = undefined;
     }
+
+    public node(relativeFilePath: string = "./ts/index") {
+        let close = () => { };
+
+        this.process = spawn("node", [relativeFilePath]);
+
+        this.process.stdout.on('data', (data) => console.log(`${this.name}_node_log: ${data}`));
+
+        this.process.stderr.on('data', (data) => console.error(`${this.name}_node_err: ${data}`));
+
+        this.process.on('close', (code) => close());
+
+        return new Promise<void>(resolve => close = resolve);
+    }
     
     private process?: ChildProcessWithoutNullStreams;
     
@@ -77,6 +91,6 @@ export default class Terminal {
 
         this.process.on('close', (code) => close() );
 
-        return new Promise(resolve => close = resolve);
+        return new Promise<void>(resolve => close = resolve);
     }
 }
