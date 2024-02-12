@@ -9,14 +9,15 @@ export default class Terminal {
     public static open(name: string): Terminal {
         if (Terminal.instances[name]) return Terminal.instances[name];
 
-        const terminal = new Terminal();
+        const terminal = new Terminal(name);
 
         Terminal.instances[name] = terminal;
 
         return terminal;
     }
 
-    public constructor(public readonly cwd: string = process.cwd()) {}
+    public readonly cwd: string = process.cwd();
+    public constructor(public readonly name: string) {}
     
     private commandList: Command[] = [];
     private commmandRunning?: Promise<void>;
@@ -42,7 +43,7 @@ export default class Terminal {
                 await command();
             }
             
-            await new Promise(res => setTimeout(res, 0));
+            await new Promise(res => setTimeout(res, 10));
         }
         
         commandsEnded();
@@ -57,7 +58,7 @@ export default class Terminal {
         }
     }
 
-    private async exec(expression: string): Promise<void> {
+    private exec(expression: string): Promise<void> {
         let close = () => { };
 
         const argumentList = expression.split(" ");
@@ -70,9 +71,9 @@ export default class Terminal {
 
         this.process = spawn(command, argumentList, { cwd: this.cwd, shell: true });
 
-        this.process.stdout.on('data', (data) => console.log(`stdout: ${data}`) );
+        this.process.stdout.on('data', (data) => console.log(`${this.name}_stdout: ${data}`) );
 
-        this.process.stderr.on('data', (data) => console.error(`stderr: ${data}`) );
+        this.process.stderr.on('data', (data) => console.error(`${this.name}_stderr: ${data}`) );
 
         this.process.on('close', (code) => close() );
 

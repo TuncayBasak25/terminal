@@ -14,12 +14,13 @@ class Terminal {
     static open(name) {
         if (Terminal.instances[name])
             return Terminal.instances[name];
-        const terminal = new Terminal();
+        const terminal = new Terminal(name);
         Terminal.instances[name] = terminal;
         return terminal;
     }
-    constructor(cwd = process.cwd()) {
-        this.cwd = cwd;
+    constructor(name) {
+        this.name = name;
+        this.cwd = process.cwd();
         this.commandList = [];
     }
     run(...commandList) {
@@ -39,7 +40,7 @@ class Terminal {
                 else if (command) {
                     yield command();
                 }
-                yield new Promise(res => setTimeout(res, 0));
+                yield new Promise(res => setTimeout(res, 10));
             }
             commandsEnded();
             this.commmandRunning = undefined;
@@ -51,19 +52,17 @@ class Terminal {
         }
     }
     exec(expression) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let close = () => { };
-            const argumentList = expression.split(" ");
-            const command = argumentList.shift();
-            if (!command) {
-                throw new Error("Expression is empty");
-            }
-            this.process = (0, child_process_1.spawn)(command, argumentList, { cwd: this.cwd, shell: true });
-            this.process.stdout.on('data', (data) => console.log(`stdout: ${data}`));
-            this.process.stderr.on('data', (data) => console.error(`stderr: ${data}`));
-            this.process.on('close', (code) => close());
-            return new Promise(resolve => close = resolve);
-        });
+        let close = () => { };
+        const argumentList = expression.split(" ");
+        const command = argumentList.shift();
+        if (!command) {
+            throw new Error("Expression is empty");
+        }
+        this.process = (0, child_process_1.spawn)(command, argumentList, { cwd: this.cwd, shell: true });
+        this.process.stdout.on('data', (data) => console.log(`${this.name}_stdout: ${data}`));
+        this.process.stderr.on('data', (data) => console.error(`${this.name}_stderr: ${data}`));
+        this.process.on('close', (code) => close());
+        return new Promise(resolve => close = resolve);
     }
 }
 Terminal.instances = {};
